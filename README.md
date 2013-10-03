@@ -3,7 +3,7 @@ skulpt.js
 
 ### Introduction
 
-This is a JavaScript/GLSL sculpting library for Three.js plane meshes.
+This is a JavaScript/GLSL height field terrain sculpting library for Three.js plane meshes.
 
 ### Features
 
