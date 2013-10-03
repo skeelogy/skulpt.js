@@ -315,6 +315,7 @@
 
     var isSculpting = false;
     var sculptUvPos = new THREE.Vector2();
+    var mouseDownButton = -1;
     function window_onMouseDown(event) {
 
         if (event.ctrlKey) {
@@ -322,7 +323,6 @@
             //detect intersection and show cursor
             detectIntersectionAndShowSculptCursor(event);
             if (intersectPoint) {
-
                 //do actual sculpting if clicked
                 if (event.button === 0) {  //LMB
                     isSculpting = true;
@@ -331,19 +331,20 @@
                     isSculpting = true;
                     gpuSkulpt.sculpt(SKULPT.REMOVE, intersectPoint, options.amount);
                 }
+                mouseDownButton = event.button;
             }
 
         } else if (event.shiftKey) {
 
             //detect intersection and show cursor
-            detectIntersectionAndShowSculptCursor();
-            if (intersectPoint) {
-                //do actual sculpting if clicked
-                if (event.button === 0) {  //LMB
+            // detectIntersectionAndShowSculptCursor();
+            // if (intersectPoint) {
+                // //do actual sculpting if clicked
+                // if (event.button === 0) {  //LMB
                     // isSculpting = true;
                     // sculptTerrain('flatten');
-                }
-            }
+                // }
+            // }
 
         }
     }
@@ -357,9 +358,10 @@
             //detect intersection and show cursor
             detectIntersectionAndShowSculptCursor(event);
             if (intersectPoint && isSculpting) {
-                if (event.button === 0) {  //LMB
+
+                if (mouseDownButton === 0) {  //LMB
                     gpuSkulpt.sculpt(SKULPT.ADD, intersectPoint, options.amount);
-                } else if (event.button === 2) {  //RMB
+                } else if (mouseDownButton === 2) {  //RMB
                     gpuSkulpt.sculpt(SKULPT.REMOVE, intersectPoint, options.amount);
                 }
             }
@@ -367,18 +369,19 @@
         } else if (event.shiftKey) {
 
             //detect intersection and show cursor
-            detectIntersectionAndShowSculptCursor(event);
-            if (intersectPoint && isSculpting) {
-                if (event.button === 0) {  //LMB
+            // detectIntersectionAndShowSculptCursor(event);
+            // if (intersectPoint && isSculpting) {
+                // if (mouseDownButton === 0) {  //LMB
                     // sculptTerrain('flatten');
-                }
-            }
+                // }
+            // }
 
         }
     }
 
     function window_onMouseUp(event) {
         isSculpting = false;
+        mouseDownButton = -1;
     }
 
     function setupEvents() {
