@@ -9,17 +9,17 @@ This is a JavaScript/GLSL height field terrain sculpting library for Three.js pl
 
 * GPU-based sculpting for fast performances on high resolution meshes
 * Load custom greyscale height map as the base terrain
-* Sculpt brush types: add, remove
-* Sculpt brush area highlight for indication of where you are sculpting
+* Different sculpt brushes: add, remove
+* Highlight on sculpt brush area to visually indicate sculpting location
 * Retrieve a proxy texture for creating a proxy mesh for CPU operations e.g. collision detection with a CPU-based rigid body system
 
 ### Examples
 
-* [Terrain Load & Sculpt](http://skeelogy.github.io/skulpt.js/examples/terrain.html)
+* [Terrain Load & Sculpt](http://skeelogy.github.io/skulpt.js/examples/skulpt_terrain.html)
 
 ### Documentation
 
-* [1.0.1](http://skeelogy.github.io/skulpt.js/docs/1.0.1)
+* [1.0](http://skeelogy.github.io/skulpt.js/docs/1.0)
 
 ### License
 

@@ -1,7 +1,7 @@
 /**
  * @fileOverview A JavaScript/GLSL sculpting script for sculpting Three.js meshes
  * @author Skeel Lee <skeel@skeelogy.com>
- * @version 1.0.1
+ * @version 1.0.2
  *
  * @example
  * //How to setup a GPU Skulpt:
@@ -80,7 +80,7 @@
 /**
  * @namespace
  */
-var SKULPT = SKULPT || { version: '1.0.1' };
+var SKULPT = SKULPT || { version: '1.0.2' };
 console.log('Using SKULPT ' + SKULPT.version);
 
 /**
@@ -505,13 +505,25 @@ SKULPT.GpuSkulpt.prototype.setCursorRemoveColor = function (r, g, b) {
     this.__cursorRemoveColor.copy(r, g, b);
 };
 SKULPT.GpuSkulpt.prototype.__init = function () {
+
     this.__checkExtensions();
-    this.__setupShaders();
     this.__setupRttScene();
+
+    //setup a reset material for clearing render targets
+    this.__clearMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            uColor: { type: 'v4', value: new THREE.Vector4() }
+        },
+        vertexShader: this.__shaders.vert['passUv'],
+        fragmentShader: this.__shaders.frag['setColor']
+    });
+
+    this.__setupRttRenderTargets();
+    this.__setupShaders();
     this.__setupVtf();
 
     //create a DataTexture, with filtering type based on whether linear filtering is available
-    if (this.supportsTextureFloatLinear) {
+    if (this.__supportsTextureFloatLinear) {
         //use linear with mipmapping
         this.__imageDataTexture = new THREE.DataTexture(null, this.__res, this.__res, THREE.RGBAFormat, THREE.FloatType, undefined, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearMipMapLinearFilter);
         this.__imageDataTexture.generateMipmaps = true;
@@ -535,8 +547,8 @@ SKULPT.GpuSkulpt.prototype.__checkExtensions = function (renderer) {
     }
 
     //get floating point linear filtering support
-    this.supportsTextureFloatLinear = context.getExtension('OES_texture_float_linear') !== null;
-    console.log('Texture float linear filtering support: ' + this.supportsTextureFloatLinear);
+    this.__supportsTextureFloatLinear = context.getExtension('OES_texture_float_linear') !== null;
+    console.log('Texture float linear filtering support: ' + this.__supportsTextureFloatLinear);
 
     //get vertex texture support
     if (!context.getParameter(context.MAX_VERTEX_TEXTURE_IMAGE_UNITS)) {
@@ -570,14 +582,6 @@ SKULPT.GpuSkulpt.prototype.__setupShaders = function () {
         },
         vertexShader: this.__shaders.vert['passUv'],
         fragmentShader: this.__shaders.frag['combineTextures']
-    });
-
-    this.__clearMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-            uColor: { type: 'v4', value: new THREE.Vector4() }
-        },
-        vertexShader: this.__shaders.vert['passUv'],
-        fragmentShader: this.__shaders.frag['setColor']
     });
 
     this.__rttEncodeFloatMaterial = new THREE.ShaderMaterial({
@@ -620,30 +624,42 @@ SKULPT.GpuSkulpt.prototype.__setupRttScene = function () {
     this.__rttQuadGeom = new THREE.PlaneGeometry(this.__size, this.__size);
     this.__rttQuadMesh = new THREE.Mesh(this.__rttQuadGeom, this.__skulptMaterial);
     this.__rttScene.add(this.__rttQuadMesh);
+};
+SKULPT.GpuSkulpt.prototype.__setupRttRenderTargets = function () {
 
     //create RTT render targets (we need two to do feedback)
-    if (this.supportsTextureFloatLinear) {
+    if (this.__supportsTextureFloatLinear) {
         this.__rttRenderTarget1 = new THREE.WebGLRenderTarget(this.__res, this.__res, this.__linearFloatRgbParams);
     } else {
         this.__rttRenderTarget1 = new THREE.WebGLRenderTarget(this.__res, this.__res, this.__nearestFloatRgbParams);
     }
     this.__rttRenderTarget1.generateMipmaps = false;
+    this.__clearRenderTarget(this.__rttRenderTarget1, 0.0, 0.0, 0.0, 0.0);  //clear render target (necessary for FireFox)
     this.__rttRenderTarget2 = this.__rttRenderTarget1.clone();
+    this.__clearRenderTarget(this.__rttRenderTarget2, 0.0, 0.0, 0.0, 0.0);  //clear render target (necessary for FireFox)
 
     //create a RTT render target for storing the combine results of all layers
     this.__rttCombinedLayer = this.__rttRenderTarget1.clone();
+    this.__clearRenderTarget(this.__rttCombinedLayer, 0.0, 0.0, 0.0, 0.0);  //clear render target (necessary for FireFox)
 
     //create RTT render target for storing proxy terrain data
-    if (this.supportsTextureFloatLinear) {
+    if (this.__supportsTextureFloatLinear) {
         this.__rttProxyRenderTarget = new THREE.WebGLRenderTarget(this.__proxyRes, this.__proxyRes, this.__linearFloatRgbParams);
     } else {
         this.__rttProxyRenderTarget = new THREE.WebGLRenderTarget(this.__proxyRes, this.__proxyRes, this.__nearestFloatRgbParams);
     }
     this.__rttProxyRenderTarget.generateMipmaps = false;
+    this.__clearRenderTarget(this.__rttProxyRenderTarget, 0.0, 0.0, 0.0, 0.0);  //clear render target (necessary for FireFox)
 
     //create another RTT render target encoding float to 4-byte data
     this.__rttFloatEncoderRenderTarget = new THREE.WebGLRenderTarget(this.__res, this.__res, this.__nearestFloatRgbaParams);
     this.__rttFloatEncoderRenderTarget.generateMipmaps = false;
+    this.__clearRenderTarget(this.__rttFloatEncoderRenderTarget, 0.0, 0.0, 0.0, 0.0);  //clear render target (necessary for FireFox)
+};
+SKULPT.GpuSkulpt.prototype.__clearRenderTarget = function (renderTarget, r, g, b, a) {
+    this.__rttQuadMesh.material = this.__clearMaterial;
+    this.__clearMaterial.uniforms['uColor'].value.set(r, g, b, a);
+    this.__renderer.render(this.__rttScene, this.__rttCamera, renderTarget, false);
 };
 //Sets up the vertex-texture-fetch for the given mesh
 SKULPT.GpuSkulpt.prototype.__setupVtf = function () {

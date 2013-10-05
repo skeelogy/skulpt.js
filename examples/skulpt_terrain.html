@@ -315,7 +315,7 @@
 
     var isSculpting = false;
     var sculptUvPos = new THREE.Vector2();
-    var mouseDownButton = -1;
+    var mouseDownButton = -1;  //firefox hack (unable to detect RMB during mousemove event)
     function window_onMouseDown(event) {
 
         if (event.ctrlKey) {
