@@ -1,45 +1,45 @@
 <!doctype html>
-<!-- The Time Machine GitHub pages theme was designed and developed by Jon Rohan, on Feb 7, 2012. -->
-<!-- Follow him for fun. http://twitter.com/jonrohan. Tail his code on http://github.com/jonrohan -->
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>skulpt.js by skeelogy</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
-  <link rel="stylesheet" href="stylesheets/stylesheet.css" media="screen"/>
-  <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
-  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-  <script type="text/javascript" src="javascripts/script.js"></script>
+  </head>
+  <body>
 
-  <title>skulpt.js</title>
-  <meta name="description" content="Three.js height field terrain sculpting library">
+      <header>
+        <h1>skulpt.js</h1>
+        <p>Three.js height field terrain sculpting library</p>
+      </header>
 
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+      <div id="banner">
+        <span id="logo"></span>
 
-</head>
-
-<body>
-
-  <div class="wrapper">
-    <header>
-      <h1 class="title">skulpt.js</h1>
-    </header>
-    <div id="container">
-      <p class="tagline">Three.js height field terrain sculpting library</p>
-      <div id="main" role="main">
-        <div class="download-bar">
-        <div class="inner">
-          <a href="https://github.com/skeelogy/skulpt.js/tarball/master" class="download-button tar"><span>Download</span></a>
-          <a href="https://github.com/skeelogy/skulpt.js/zipball/master" class="download-button zip"><span>Download</span></a>
-          <a href="https://github.com/skeelogy/skulpt.js" class="code">View skulpt.js on GitHub</a>
+        <a href="https://github.com/skeelogy/skulpt.js" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/skeelogy/skulpt.js/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/skeelogy/skulpt.js/tarball/master" class="button">TAR</a></li>
+          </ul>
         </div>
-        <span class="blc"></span><span class="trc"></span>
-        </div>
-        <article class="markdown-body">
-          <h1>
-<a name="skulptjs" class="anchor" href="#skulptjs"><span class="octicon octicon-link"></span></a>skulpt.js</h1>
+      </div><!-- end banner -->
 
-<h3>
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+        <h3>
 <a name="introduction" class="anchor" href="#introduction"><span class="octicon octicon-link"></span></a>Introduction</h3>
 
 <p>This is a JavaScript/GLSL height field terrain sculpting library for Three.js plane meshes.</p>
@@ -50,45 +50,32 @@
 <ul>
 <li>GPU-based sculpting for fast performances on high resolution meshes</li>
 <li>Load custom greyscale height map as the base terrain</li>
-<li>Sculpt brush types: add, remove</li>
-<li>Sculpt brush area highlight for indication of where you are sculpting</li>
+<li>Different sculpt brushes: add, remove</li>
+<li>Highlight on sculpt brush area to visually indicate sculpting location</li>
 <li>Retrieve a proxy texture for creating a proxy mesh for CPU operations e.g. collision detection with a CPU-based rigid body system</li>
 </ul><h3>
 <a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h3>
 
 <ul>
-<li><a href="http://skeelogy.github.io/skulpt.js/examples/terrain.html">Terrain Load &amp; Sculpt</a></li>
+<li><a href="http://skeelogy.github.io/skulpt.js/examples/skulpt_terrain.html">Terrain Load &amp; Sculpt</a></li>
 </ul><h3>
 <a name="documentation" class="anchor" href="#documentation"><span class="octicon octicon-link"></span></a>Documentation</h3>
 
 <ul>
-<li><a href="http://skeelogy.github.io/skulpt.js/docs/1.0.1">1.0.1</a></li>
+<li><a href="http://skeelogy.github.io/skulpt.js/docs/1.0">1.0</a></li>
 </ul><h3>
 <a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h3>
 
 <p>Released under The MIT License (MIT)<br>
 Copyright (c) 2013 Skeel Lee (<a href="http://cg.skeelogy.com">http://cg.skeelogy.com</a>) <a href="https://github.com/skeelogy" class="user-mention">@skeelogy</a></p>
-        </article>
-      </div>
+      </section>
+      <footer>
+        <p>Project maintained by <a href="https://github.com/skeelogy">skeelogy</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
+      </footer>
     </div>
-    <footer>
-      <div class="owner">
-      <p><a href="https://github.com/skeelogy" class="avatar"><img src="https://2.gravatar.com/avatar/5a94a7e1a31cbc746a5ce35234267514?d=https%3A%2F%2Fidenticons.github.com%2Fd8512bdc6e6dbf909dcc78174f02da41.png&amp;s=30" width="48" height="48"/></a> <a href="https://github.com/skeelogy">skeelogy</a> maintains <a href="https://github.com/skeelogy/skulpt.js">skulpt.js</a></p>
-
-
-      </div>
-      <div class="creds">
-        <small>This page generated using <a href="https://pages.github.com/">GitHub Pages</a><br/>theme by <a href="https://twitter.com/jonrohan/">Jon Rohan</a></small>
-      </div>
-    </footer>
-  </div>
-  <div class="current-section">
-    <a href="#top">Scroll to top</a>
-    <a href="https://github.com/skeelogy/skulpt.js/tarball/master" class="tar">tar</a><a href="https://github.com/skeelogy/skulpt.js/zipball/master" class="zip">zip</a><a href="" class="code">source code</a>
-    <p class="name"></p>
-  </div>
-
-            <script type="text/javascript">
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+              <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
           </script>
@@ -99,5 +86,5 @@ Copyright (c) 2013 Skeel Lee (<a href="http://cg.skeelogy.com">http://cg.skeelog
             } catch(err) {}
           </script>
 
-</body>
+  </body>
 </html>
