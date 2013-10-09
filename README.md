@@ -3,7 +3,7 @@ skulpt.js
 
 ### Introduction
 
-This is a JavaScript/GLSL height field terrain sculpting library for Three.js plane meshes.
+This is a JavaScript / GLSL height field terrain sculpting library for Three.js plane meshes.
 
 ### Features
 
@@ -30,9 +30,9 @@ This is a JavaScript/GLSL height field terrain sculpting library for Three.js pl
 
 ### Documentation
 
-* [1.0](http://skeelogy.github.io/skulpt.js/docs/1.0)
+* [1.0.x](http://skeelogy.github.io/skulpt.js/docs/1.0.x)
 
 ### License
 
 Released under The MIT License (MIT)<br/>
-Copyright (c) 2013 Skeel Lee ([http://cg.skeelogy.com](http://cg.skeelogy.com)) @skeelogy
+Copyright (c) 2013 Skeel Lee ([http://cg.skeelogy.com](http://cg.skeelogy.com))
