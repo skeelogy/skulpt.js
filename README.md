@@ -32,6 +32,10 @@ This is a JavaScript / GLSL height field terrain sculpting library for Three.js 
 
 * [1.0.x](http://skeelogy.github.io/skulpt.js/docs/1.0.x)
 
+### Browser Support
+
+Tested only in Google Chrome (recommended) and Mozilla FireFox
+
 ### License
 
 Released under The MIT License (MIT)<br/>
