@@ -1,7 +1,7 @@
 /**
  * @fileOverview A JavaScript/GLSL sculpting script for sculpting Three.js meshes
  * @author Skeel Lee <skeel@skeelogy.com>
- * @version 1.0.2
+ * @version 1.1.0-prealpha-1
  *
  * @example
  * //How to setup a GPU Skulpt:
@@ -80,7 +80,7 @@
 /**
  * @namespace
  */
-var SKULPT = SKULPT || { version: '1.0.2' };
+var SKULPT = SKULPT || { version: '1.1.0-prealpha-1' };
 console.log('Using SKULPT ' + SKULPT.version);
 
 /**
@@ -119,6 +119,7 @@ SKULPT.GpuSkulpt = function (options) {
     this.__texelSize = 1.0 / this.__res;
 
     this.__imageProcessedData = new Float32Array(4 * this.__res * this.__res);
+    this.__loadSculptProcessedData = new Float32Array(4 * this.__res * this.__res);
 
     this.__isSculpting = false;
     this.__sculptUvPos = new THREE.Vector2();
@@ -126,6 +127,8 @@ SKULPT.GpuSkulpt = function (options) {
     this.__cursorHoverColor = new THREE.Vector3(0.4, 0.4, 0.4);
     this.__cursorAddColor = new THREE.Vector3(0.3, 0.5, 0.1);
     this.__cursorRemoveColor = new THREE.Vector3(0.5, 0.2, 0.1);
+
+    this.__isLoading = false;
 
     this.__shouldClear = false;
 
@@ -151,7 +154,7 @@ SKULPT.GpuSkulpt = function (options) {
         type: THREE.FloatType
     };
 
-    this.__nearestFloatRgbaParams = {
+    this.__nearestUnsignedByteRgbaParams = {
         minFilter: THREE.NearestFilter,
         magFilter: THREE.NearestFilter,
         wrapS: THREE.ClampToEdgeWrapping,
@@ -159,7 +162,7 @@ SKULPT.GpuSkulpt = function (options) {
         format: THREE.RGBAFormat,
         stencilBuffer: false,
         depthBuffer: false,
-        type: THREE.FloatType
+        type: THREE.UNSIGNED_BYTE
     };
 
     this.__pixelByteData = new Uint8Array(this.__res * this.__res * 4);
@@ -299,6 +302,20 @@ SKULPT.GpuSkulpt.prototype.__shaders = {
 
             "void main() {",
                 "gl_FragColor = texture2D(uTexture1, vUv) + texture2D(uTexture2, vUv);",
+            "}"
+
+        ].join('\n'),
+
+        textureToRenderTarget: [
+
+            //Fragment shader to load texture into render target
+
+            "uniform sampler2D uTexture;",
+
+            "varying vec2 vUv;",
+
+            "void main() {",
+                "gl_FragColor = texture2D(uTexture, vUv);",
             "}"
 
         ].join('\n'),
@@ -522,15 +539,21 @@ SKULPT.GpuSkulpt.prototype.__init = function () {
     this.__setupShaders();
     this.__setupVtf();
 
-    //create a DataTexture, with filtering type based on whether linear filtering is available
+    //create DataTextures, with filtering type based on whether linear filtering is available
     if (this.__supportsTextureFloatLinear) {
         //use linear with mipmapping
         this.__imageDataTexture = new THREE.DataTexture(null, this.__res, this.__res, THREE.RGBAFormat, THREE.FloatType, undefined, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearMipMapLinearFilter);
         this.__imageDataTexture.generateMipmaps = true;
+
+        this.__loadSculptDataTexture = new THREE.DataTexture(null, this.__res, this.__res, THREE.RGBAFormat, THREE.FloatType, undefined, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearMipMapLinearFilter);
+        this.__loadSculptDataTexture.generateMipmaps = true;
     } else {
         //resort to nearest filter only, without mipmapping
         this.__imageDataTexture = new THREE.DataTexture(null, this.__res, this.__res, THREE.RGBAFormat, THREE.FloatType, undefined, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.NearestFilter, THREE.NearestFilter);
         this.__imageDataTexture.generateMipmaps = false;
+
+        this.__loadSculptDataTexture = new THREE.DataTexture(null, this.__res, this.__res, THREE.RGBAFormat, THREE.FloatType, undefined, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.NearestFilter, THREE.NearestFilter);
+        this.__loadSculptDataTexture.generateMipmaps = false;
     }
 };
 SKULPT.GpuSkulpt.prototype.__checkExtensions = function (renderer) {
@@ -582,6 +605,14 @@ SKULPT.GpuSkulpt.prototype.__setupShaders = function () {
         },
         vertexShader: this.__shaders.vert['passUv'],
         fragmentShader: this.__shaders.frag['combineTextures']
+    });
+
+    this.__textureToRenderTargetMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            uTexture: { type: 't', value: null }
+        },
+        vertexShader: this.__shaders.vert['passUv'],
+        fragmentShader: this.__shaders.frag['textureToRenderTarget']
     });
 
     this.__rttEncodeFloatMaterial = new THREE.ShaderMaterial({
@@ -652,7 +683,7 @@ SKULPT.GpuSkulpt.prototype.__setupRttRenderTargets = function () {
     this.__clearRenderTarget(this.__rttProxyRenderTarget, 0.0, 0.0, 0.0, 0.0);  //clear render target (necessary for FireFox)
 
     //create another RTT render target encoding float to 4-byte data
-    this.__rttFloatEncoderRenderTarget = new THREE.WebGLRenderTarget(this.__res, this.__res, this.__nearestFloatRgbaParams);
+    this.__rttFloatEncoderRenderTarget = new THREE.WebGLRenderTarget(this.__res, this.__res, this.__nearestUnsignedByteRgbaParams);
     this.__rttFloatEncoderRenderTarget.generateMipmaps = false;
     this.__clearRenderTarget(this.__rttFloatEncoderRenderTarget, 0.0, 0.0, 0.0, 0.0);  //clear render target (necessary for FireFox)
 };
@@ -712,6 +743,16 @@ SKULPT.GpuSkulpt.prototype.update = function (dt) {
         this.__renderer.render(this.__rttScene, this.__rttCamera, this.__rttRenderTarget1, false);
         this.__swapRenderTargets();
         this.__isSculpting = false;
+        this.__updateCombinedLayers = true;
+    }
+
+    //load texture into sculpt layer if requested
+    if (this.__isLoading) {
+        this.__rttQuadMesh.material = this.__textureToRenderTargetMaterial;
+        this.__textureToRenderTargetMaterial.uniforms['uTexture'].value = this.__loadSculptDataTexture;
+        this.__renderer.render(this.__rttScene, this.__rttCamera, this.__rttRenderTarget1, false);
+        this.__swapRenderTargets();
+        this.__isLoading = false;
         this.__updateCombinedLayers = true;
     }
 
@@ -886,14 +927,55 @@ SKULPT.GpuSkulpt.prototype.__getPixelEncodedByteData = function (renderTarget, p
  * @return {Float32Array} Float data of every pixel of the terrain texture
  */
 SKULPT.GpuSkulpt.prototype.getPixelFloatData = function () {
+    return this.getPixelFloatDataForLayer(SKULPT.LAYER.COMBINED);  //default to combined layer for backward compatibility
+};
+/**
+ * Gets float data for every pixel for a particular layer<br/><strong>NOTE: This is an expensive operation.</strong>
+ * @param {string} layer SKULPT.LAYER to get the pixel float data from
+ * @return {Float32Array} Float data of every pixel of the terrain texture for specified layer
+ */
+SKULPT.GpuSkulpt.prototype.getPixelFloatDataForLayer = function (layer) {
 
     //get the encoded byte data first
-    this.__getPixelEncodedByteData(this.__rttCombinedLayer, this.__pixelByteData, 'r', this.__res, this.__res);
+    var texture;
+    if (layer == SKULPT.LAYER.BASE) {
+        texture = this.__imageDataTexture;
+    } else if (layer == SKULPT.LAYER.SCULPT) {
+        texture = this.__rttRenderTarget2;
+    } else {
+        texture = this.__rttCombinedLayer;
+    }
+
+    //get pixel encoded byte data
+    this.__getPixelEncodedByteData(texture, this.__pixelByteData, 'r', this.__res, this.__res);
 
     //cast to float
     var pixelFloatData = new Float32Array(this.__pixelByteData.buffer);
     return pixelFloatData;
 };
+/**
+ * Sets float data for every pixel of the SKULPT.LAYER.SCULPT layer
+ * @param {Float32Array} Float data of every pixel to assign to SKULPT.LAYER.SCULPT layer
+ */
+SKULPT.GpuSkulpt.prototype.setPixelFloatData = function (pixelFloatData) {
+
+    // prep data for data texture
+    var i, j, ilen, jlen, index;
+    for (i = 0, ilen = this.__res; i < ilen; i++) {
+        for (j = 0, jlen = this.__res; j < jlen; j++) {
+            index = i * this.__res + j;
+            this.__loadSculptProcessedData[index * 4] = pixelFloatData[(ilen - 1 - i) * this.__res + j];
+            this.__loadSculptProcessedData[index * 4 + 1] = 0;
+            this.__loadSculptProcessedData[index * 4 + 2] = 0;
+            this.__loadSculptProcessedData[index * 4 + 3] = 0;
+        }
+    }
+
+    //assign data to DataTexture
+    this.__loadSculptDataTexture.image.data = this.__loadSculptProcessedData;
+    this.__loadSculptDataTexture.needsUpdate = true;
+    this.__isLoading = true;
+}
 /**
  * Gets float data for every pixel of the proxy terrain texture<br/><strong>NOTE: This is an expensive operation.</strong>
  * @return {Float32Array} Float data of every pixel of the proxy terrain texture
@@ -943,3 +1025,9 @@ SKULPT.ADD = 1;
  * @const
  */
 SKULPT.REMOVE = 2;
+
+SKULPT.LAYER = {
+    BASE: 1,
+    SCULPT: 2,
+    COMBINED: 3
+};

@@ -9,6 +9,8 @@
     <!--load helper libraries-->
     <script type="text/javascript" src="js/jquery/jquery-2.0.2.min.js"></script>
     <script type="text/javascript" src="js/stackblur/StackBlur.js"></script>
+    <script type="text/javascript" src="js/filesaverjs/FileSaver.js"></script>
+    <script type="text/javascript" src="js/filesaverjs/Blob.js"></script>
 
     <!--load 3D libraries-->
     <script type="text/javascript" src="js/threejs/three.min.js"></script>
@@ -55,7 +57,53 @@
         },
         renderingShadows: true,
         renderingShadowCasters: false,
-        displaySculptTexture: false
+        displaySculptTexture: false,
+        saveSculptFileName: 'mySkulpt',
+        saveSculptToFile: function () {
+
+            // get pixel float data for sculpt layer
+            var sculptData = gpuSkulpt.getPixelFloatDataForLayer(SKULPT.LAYER.SCULPT);
+
+            // save sculpt float data to file
+            var filename = this.saveSculptFileName + '.skulpt';
+            saveAs(new Blob([sculptData], {type: "example/binary"}), filename);
+        },
+        loadSculptFromFile: function () {
+
+            $('#loadFileInput').unbind('change').on('change', function(e) {
+
+                // get the selected file
+                var file = this.files[0];
+
+                // create a blob
+                var start = 0;
+                var stop = file.size - 1;
+                var blob = file.slice(start, stop + 1);
+
+                // read in the file
+                var reader = new FileReader();
+                reader.onloadend = function(event) {
+                    if (event.target.readyState == FileReader.DONE) {
+
+                        gpuSkulpt.clear();
+
+                        // cast ArrayBuffer into a Float32Array
+                        var sculptData = new Float32Array(event.target.result);
+
+                        //save data to gpuSkulpt
+                        gpuSkulpt.setPixelFloatData(sculptData);
+                    }
+                }
+                reader.readAsArrayBuffer(blob);
+
+                // clear input so that the same file can be selected again
+                $('#loadFileInput').val('');
+
+            });
+
+            // call click event on input which initiates file selection
+            $('#loadFileInput').click();
+        }
     };
 
     function checkWebGl() {
@@ -505,6 +553,14 @@
         }
         control.onChange(toggleSculptTexture);
         toggleSculptTexture(options.displaySculptTexture);
+
+        //Save/Load folder
+        saveLoadFolder = gui.addFolder('Save / Load');
+        saveLoadFolder.open();
+
+        control = saveLoadFolder.add(options, 'saveSculptFileName').name('File Name');
+        control = saveLoadFolder.add(options, 'saveSculptToFile').name('Save To File');
+        control = saveLoadFolder.add(options, 'loadSculptFromFile').name('Load From File');
     }
 
     $(document).ready(function () {
@@ -568,5 +624,6 @@
         <div>Camera: [ Alt+LMB: rotate ] [ Alt+MMB: pan ] [ Alt+RMB: zoom ]</div>
         <div>Sculpt: [ Ctrl+LMB: add ] [ Ctrl+RMB: remove ] </div>
     </div>
+    <input id="loadFileInput" type="file" style="visibility:hidden" />
 </body>
 </html>
